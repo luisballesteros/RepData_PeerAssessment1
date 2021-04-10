@@ -15,7 +15,7 @@ Load libraries and delete variables
 library(plyr)
 library(dplyr)
 library(data.table)
-library(lubridate)
+# library(lubridate)
 rm(list=ls())
 ```
 Create data directory (if it does not exist previously) and unzip the .zip data
@@ -40,8 +40,40 @@ summary(df)
 ```
 
 ## What is mean total number of steps taken per day?
+### *Calculate the total number of steps taken per day*
+```{r}
+# For this part of the assignment, you can ignore the missing values in the dataset.
+# Note the use of the '.' function to allow date be used without quoting
+df_day <- ddply(df, .(date), summarize, 
+                sum = sum(steps, na.rm = TRUE), 
+                mean = mean(steps, na.rm = TRUE),
+                median = median(steps, na.rm = TRUE)
+                )
+
+df_day
+```
+### *Make a histogram of the total number of steps taken each day*
+```{r histogram_01}
+hist(df_day$sum,
+     main="Histogram of total number of steps taken each day", 
+     xlab = "total number of steps taken each day")
+
+dev.copy(png, file = "figure/hist_steps_day.png")
+dev.off()
+```
+### *Calculate and report the mean and median of the total number of steps taken per day*
+```{r}
+# Calculate and report the mean and median of the total number 
+# of steps taken per day
+mean_step_day <- mean(df$steps, na.rm = TRUE)
+median_step_day <- median(df$steps, na.rm = TRUE)
+```
+The **mean** of the total number of steps taken per day 
+is **`r mean_step_day`**.
 
 
+The **median** of the total number of steps taken per day is
+**`r median_step_day`**.
 
 ## What is the average daily activity pattern?
 
