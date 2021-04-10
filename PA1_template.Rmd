@@ -56,7 +56,8 @@ df_day
 ```{r histogram_01}
 hist(df_day$sum,
      main="Histogram of total number of steps taken each day", 
-     xlab = "total number of steps taken each day")
+     xlab = "total number of steps taken each day",
+     col="#2166AC")
 
 dev.copy(png, file = "figure/hist_steps_day.png")
 dev.off()
@@ -76,7 +77,33 @@ The **median** of the total number of steps taken per day is
 **`r median_step_day`**.
 
 ## What is the average daily activity pattern?
+### Make plot of the 5-minute interval *vs* average number of steps taken
+Calculation of average number of steps per 5-minute interval per day
+```{r}
+# Make a time series plot type = "l" of the 5-minute interval (x-axis) and
+# the average number of steps taken, averaged across all days (y-axis)
 
+df_minute <- ddply(df, .(interval), summarize, 
+                mean = mean(steps, na.rm = TRUE),
+                )
+
+head(df_minute)
+```
+Time series plot type = "l" of the 5-minute interval (x-axis) and 
+the average number of steps taken, averaged across all days (y-axis)
+
+```{r plot_line_mean_interval}
+plot(x=df_minute$interval,
+     y=df_minute$mean,
+     type="l",
+     main="Average number of steps per interval", 
+     xlab = "5-minute interval",
+     ylab = "Average number of steps",
+     col="#2166AC",
+     frame.plot = FALSE)
+dev.copy(png, file = "figure/plot_line_step_interval.png")
+dev.off()
+```
 
 
 ## Imputing missing values
