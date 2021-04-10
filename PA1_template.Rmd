@@ -4,11 +4,40 @@ output:
   html_document:
     keep_md: true
 ---
+```{r setoptions,echo=TRUE}
 
+```
 
 ## Loading and preprocessing the data
+Load libraries and delete variables
 
+```{r}
+library(plyr)
+library(dplyr)
+library(data.table)
+library(lubridate)
+rm(list=ls())
+```
+Create data directory (if it does not exist previously) and unzip the .zip data
+file in the "data" directory.
+```{r}
+# Create data folder if it does not exist
+if (!file.exists("data")) {
+        dir.create("data")
+}
+# Unzip file in "data" directory
+unzip(zipfile = "activity.zip", exdir = "./data")
+```
 
+The data frame is created with fread and the data structure and type of 
+each variable is checked.
+```{r}
+# Create a "Data Frame" with "fread"
+df <- fread("./data/activity.csv")
+head(df)
+str(df)
+summary(df)
+```
 
 ## What is mean total number of steps taken per day?
 
