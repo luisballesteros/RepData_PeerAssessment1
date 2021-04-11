@@ -15,6 +15,8 @@ Load libraries and delete variables
 library(plyr)
 library(dplyr)
 library(data.table)
+library(chron)
+library(lattice)
 # library(lubridate)
 rm(list=ls())
 ```
@@ -105,9 +107,110 @@ dev.copy(png, file = "figure/plot_line_step_interval.png")
 dev.off()
 ```
 
-
 ## Imputing missing values
+### Imputing missing values
+Note that there are a number of days/intervals where there are missing values 
+(coded as NA). The presence of missing days may introduce bias into some
+calculations or summaries of the data.
+```{r}
+# Calculate and report the total number of missing values in the dataset 
+# (i.e. the total number of rows with NA
+nas_total <- sum(is.na(df$steps))
+```
+The total number of **missing values** in the dataset is **`r nas_total`**.
 
+Create a new dataset that is equal to the original dataset but with the missing
+data filled in. The missing data are filled with the 
+**mean for that 5-minute interval**.
+```{r}
+# Devise a strategy for filling in all of the missing values in the dataset. 
+# The strategy does not need to be sophisticated. For example, you could use
+# the mean/median for that day, or the mean for that 5-minute interval, etc.
+# Merge data frame df & df_minute
+df_replace <- merge(df, df_minute, by="interval")
+# fill nas with mean by interval
+df_replace <- df_replace %>%
+       mutate(steps  = ifelse(is.na(steps), df_replace$mean, steps))
+# sorted by date
+df_replace <- df_replace[order(date),]
+head(df_replace)
+```
+Make a histogram of the total number of steps taken each day and Calculate and 
+report the mean and median total number of steps taken per day.
+```{r hist_steps_day_nas_free}
+## Make a histogram of the total number of steps taken each day and Calculate 
+# and report the mean and median total number of steps taken per day without NA.
+df_replace_day <- ddply(df_replace, .(date), summarize, 
+                sum = sum(steps))
 
+head(df_replace_day)
+# Make a histogram of the total number of steps taken each day
+hist(df_day$sum,
+     main="Histogram of total number of steps taken per day without NAs", 
+     xlab = "total number of steps taken each day",
+     col = "#D6604D")
+
+dev.copy(png, file = "figure/hist_steps_day_nas_free.png")
+dev.off()
+
+```
+Calculate and report the mean and median total number of steps taken per day 
+without NAs
+```{r}
+mean_step_day_ok <- mean(df_replace$steps)
+median_step_day_ok <- median(df_replace$steps)
+```
+The **mean** of the total number of steps taken per day without NAs
+is **`r mean_step_day_ok`**.
+The **median** of the total number of steps taken per day without NAs
+is **`r median_step_day_ok`**.
+
+Do these values differ from the estimates from the first part of the assignment?
+```{r}
+dif_mean <- mean_step_day - mean_step_day_ok 
+dif_median <- median_step_day - median_step_day_ok
+```
+The difference between the original mean and that of filling in Nas with the 
+interval **mean** is **`r dif_mean`**.
+
+The difference between the original mean and that of filling in Nas with the 
+interval **median** is **`r dif_median`**.
+
+What is the impact of imputing missing data on the estimates of the total daily 
+number of steps?
+```{r}
+steps_original <- sum(df$steps, na.rm = TRUE)
+steps_modified <- round(sum(df_replace$steps))
+# remove scientific notation
+options(scipen=999)
+```
+The total number of original daily steps is **`r steps_original `** and 
+the total number of modified daily steps without NAs is **`r steps_modified `** 
 
 ## Are there differences in activity patterns between weekdays and weekends?
+
+Create a new factor variable in the dataset with two levels – “weekday” and 
+“weekend” indicating whether a given date is a weekday or weekend day.
+```{r}
+# is.weekend from library(chron)
+df_replace <- df_replace %>%
+        mutate(day_week  = ifelse(is.weekend(df_replace$date), 
+                                  "weekend", "weekday"))
+df_replace$day_week <- as.factor(df_replace$day_week)
+str(df_replace)
+```
+Make a panel plot containing a time series plot (i.e. type = "l") 
+of the 5-minute interval (x-axis) and the average number of steps taken, 
+averaged across all weekday days or weekend days (y-axis).
+```{r}
+# summarize by day_week and interval
+df_day_week <- ddply(df_replace, .(day_week, interval), summarize, 
+                        mean_interval_day = mean(steps))
+# xyplot from library(lattice)
+with(df_day_week, xyplot(mean_interval_day ~ interval | day_week, 
+                         type='l', 
+                         layout = c(1, 2)))
+dev.copy(png, file = "figure/lattice_plot_lines_mean_step_day_week.png")
+dev.off()
+```
+
